@@ -1,5 +1,5 @@
 import React from 'react';
-import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { DataProvider } from './contexts/DataContext';
 import { Layout } from './components/Layout';
@@ -22,15 +22,35 @@ const AppRoutes = () => {
     const { isAuthenticated } = useAuth();
     return (
         <Routes>
-            <Route path="/login" element={isAuthenticated ? <Navigate to="/" /> : <Login />} />
+            <Route path="/login" element={isAuthenticated ? <Navigate to="/" replace /> : <Login />} />
             
-            <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-            <Route path="/quotes" element={<ProtectedRoute><Quotes /></ProtectedRoute>} />
-            <Route path="/orders" element={<ProtectedRoute><Orders /></ProtectedRoute>} />
-            <Route path="/billing" element={<ProtectedRoute><Billing /></ProtectedRoute>} />
-            <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+            <Route path="/" element={
+                <ProtectedRoute>
+                    <Dashboard />
+                </ProtectedRoute>
+            } />
+            <Route path="/quotes" element={
+                <ProtectedRoute>
+                    <Quotes />
+                </ProtectedRoute>
+            } />
+            <Route path="/orders" element={
+                <ProtectedRoute>
+                    <Orders />
+                </ProtectedRoute>
+            } />
+            <Route path="/billing" element={
+                <ProtectedRoute>
+                    <Billing />
+                </ProtectedRoute>
+            } />
+            <Route path="/settings" element={
+                <ProtectedRoute>
+                    <Settings />
+                </ProtectedRoute>
+            } />
             
-            <Route path="*" element={<Navigate to="/" />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
     );
 };
