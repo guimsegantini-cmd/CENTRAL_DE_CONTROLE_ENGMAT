@@ -4,6 +4,7 @@ import { StorageService, getFromStorage, saveToStorage } from '../services/stora
 import { FirestoreService } from '../services/firestoreService';
 import { isFirebaseConfigured } from '../lib/firebase';
 import { DEFAULT_LEAD_TIME_DAYS, addDays, parseISO, format } from '../constants';
+import { useAuth } from './AuthContext';
 
 interface DataContextType {
   quotes: Quote[];
@@ -27,31 +28,38 @@ const defaultSettings: AppSettings = {
 };
 
 export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { user } = useAuth();
   const [quotes, setQuotes] = useState<Quote[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
   const [settings, setSettings] = useState<AppSettings>(defaultSettings);
 
   useEffect(() => {
     if (isFirebaseConfigured) {
-        // Real-time subscriptions
-        const unsubQuotes = FirestoreService.subscribeToQuotes(setQuotes);
-        const unsubOrders = FirestoreService.subscribeToOrders(setOrders);
-        const unsubSettings = FirestoreService.subscribeToSettings((data) => {
-            if (data) setSettings(data);
-        });
+        if (user) {
+            // Real-time subscriptions only if authenticated
+            const unsubQuotes = FirestoreService.subscribeToQuotes(setQuotes);
+            const unsubOrders = FirestoreService.subscribeToOrders(setOrders);
+            const unsubSettings = FirestoreService.subscribeToSettings((data) => {
+                if (data) setSettings(data);
+            });
 
-        return () => {
-            unsubQuotes();
-            unsubOrders();
-            unsubSettings();
-        };
+            return () => {
+                unsubQuotes();
+                unsubOrders();
+                unsubSettings();
+            };
+        } else {
+            // Clear data on logout
+            setQuotes([]);
+            setOrders([]);
+        }
     } else {
         // Fallback to Local Storage
         setQuotes(getFromStorage(StorageService.QUOTES, []));
         setOrders(getFromStorage(StorageService.ORDERS, []));
         setSettings(getFromStorage(StorageService.SETTINGS, defaultSettings));
     }
-  }, []);
+  }, [user]);
 
   // --- Handlers (Switch between Firebase and Local Storage) ---
 
