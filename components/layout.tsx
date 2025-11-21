@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   FileText, 
@@ -17,6 +17,7 @@ interface LayoutProps {
 
 export const Layout: React.FC<LayoutProps> = ({ children }) => {
   const { logout, user } = useAuth();
+  const location = useLocation();
 
   const navItems = [
     { to: '/', icon: LayoutDashboard, label: 'Dashboard' },
@@ -39,22 +40,23 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         </div>
 
         <nav className="flex-1 py-6 px-3 space-y-1">
-          {navItems.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              className={({ isActive }) =>
-                `flex items-center px-4 py-3 rounded-lg transition-colors ${
+          {navItems.map((item) => {
+            const isActive = location.pathname === item.to;
+            return (
+              <Link
+                key={item.to}
+                to={item.to}
+                className={`flex items-center px-4 py-3 rounded-lg transition-colors ${
                   isActive
                     ? 'bg-secondary text-white shadow-lg'
                     : 'text-gray-300 hover:bg-gray-800 hover:text-white'
-                }`
-              }
-            >
-              <item.icon className="w-5 h-5 mr-3" />
-              {item.label}
-            </NavLink>
-          ))}
+                }`}
+              >
+                <item.icon className="w-5 h-5 mr-3" />
+                {item.label}
+              </Link>
+            );
+          })}
         </nav>
 
         <div className="p-4 border-t border-gray-700">
@@ -92,20 +94,21 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
         {/* Mobile Nav */}
         <nav className="md:hidden bg-white border-b flex justify-around p-2">
-           {navItems.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              className={({ isActive }) =>
-                `flex flex-col items-center p-2 rounded-md ${
+           {navItems.map((item) => {
+             const isActive = location.pathname === item.to;
+             return (
+              <Link
+                key={item.to}
+                to={item.to}
+                className={`flex flex-col items-center p-2 rounded-md ${
                   isActive ? 'text-primary' : 'text-gray-500'
-                }`
-              }
-            >
-              <item.icon className="w-5 h-5" />
-              <span className="text-xs mt-1">{item.label}</span>
-            </NavLink>
-          ))}
+                }`}
+              >
+                <item.icon className="w-5 h-5" />
+                <span className="text-xs mt-1">{item.label}</span>
+              </Link>
+            );
+          })}
         </nav>
 
         {/* Page Content */}
