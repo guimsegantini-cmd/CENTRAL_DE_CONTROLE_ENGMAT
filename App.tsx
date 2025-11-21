@@ -2,7 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { DataProvider } from './contexts/DataContext';
-import { Layout } from './components/Layout';
+import { AppLayout } from './components/AppLayout';
 import { Login } from './pages/Login';
 import { Quotes } from './pages/Quotes';
 import { Orders } from './pages/Orders';
@@ -15,7 +15,7 @@ const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) =
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
-  return <Layout>{children}</Layout>;
+  return <AppLayout>{children}</AppLayout>;
 };
 
 const AppRoutes = () => {
