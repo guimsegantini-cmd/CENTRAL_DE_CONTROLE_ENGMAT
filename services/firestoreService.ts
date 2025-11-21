@@ -26,6 +26,8 @@ export const FirestoreService = {
         return onSnapshot(q, (snapshot) => {
             const quotes = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Quote));
             callback(quotes);
+        }, (error) => {
+            console.warn("Firestore Subscription Error (Quotes):", error.message);
         });
     },
 
@@ -53,6 +55,8 @@ export const FirestoreService = {
         return onSnapshot(q, (snapshot) => {
             const orders = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Order));
             callback(orders);
+        }, (error) => {
+            console.warn("Firestore Subscription Error (Orders):", error.message);
         });
     },
 
@@ -82,6 +86,8 @@ export const FirestoreService = {
             } else {
                 callback(null);
             }
+        }, (error) => {
+            console.warn("Firestore Subscription Error (Settings):", error.message);
         });
     },
 
