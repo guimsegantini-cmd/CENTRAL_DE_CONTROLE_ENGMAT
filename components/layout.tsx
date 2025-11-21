@@ -15,7 +15,7 @@ interface LayoutProps {
   children: React.ReactNode;
 }
 
-export const Layout: React.FC<LayoutProps> = ({ children }) => {
+export const AppLayout: React.FC<LayoutProps> = ({ children }) => {
   const { logout, user } = useAuth();
   const location = useLocation();
 
