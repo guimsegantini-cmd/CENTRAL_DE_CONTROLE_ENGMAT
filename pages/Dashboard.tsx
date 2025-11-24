@@ -11,6 +11,7 @@ export const Dashboard: React.FC = () => {
   const [endDate, setEndDate] = useState<string>(format(endOfMonth(new Date()), 'yyyy-MM-dd'));
   const [filterFactory, setFilterFactory] = useState('');
   const [targetViewMode, setTargetViewMode] = useState<'percent' | 'value'>('percent');
+  const [quoteViewMode, setQuoteViewMode] = useState<'count' | 'value'>('count');
 
   // --- Data Preparation ---
 
@@ -103,14 +104,17 @@ export const Dashboard: React.FC = () => {
       return Object.entries(data).map(([name, value]) => ({ name, value }));
   }, [filteredOrders, filterFactory]);
 
-  // 5. Quotes Count by Factory (Existing)
+  // 5. Quotes by Factory (Volume & Value)
   const quotesByFactory = useMemo(() => {
-    const data: Record<string, number> = {};
+    const data: Record<string, { count: number; value: number }> = {};
     filteredQuotes.forEach(q => {
         if (filterFactory && q.factory !== filterFactory) return;
-        data[q.factory] = (data[q.factory] || 0) + 1;
+        
+        if (!data[q.factory]) data[q.factory] = { count: 0, value: 0 };
+        data[q.factory].count += 1;
+        data[q.factory].value += q.value;
     });
-    return Object.entries(data).map(([name, value]) => ({ name, value }));
+    return Object.entries(data).map(([name, stats]) => ({ name, ...stats }));
   }, [filteredQuotes, filterFactory]);
 
   // Conversion Rate
@@ -325,15 +329,38 @@ export const Dashboard: React.FC = () => {
 
          {/* Volume de Orçamentos */}
          <div className="bg-white p-6 rounded-lg shadow">
-            <h3 className="text-lg font-bold mb-4 border-b pb-2">Volume de Orçamentos</h3>
+            <div className="flex justify-between items-center mb-4 border-b pb-2">
+                <h3 className="text-lg font-bold">Orçamentos por Fábrica</h3>
+                <div className="flex bg-gray-100 rounded-lg p-1">
+                    <button 
+                        onClick={() => setQuoteViewMode('count')}
+                        className={`px-3 py-1 text-xs rounded-md transition-all ${quoteViewMode === 'count' ? 'bg-white shadow text-primary font-bold' : 'text-gray-500 hover:text-gray-700'}`}
+                    >
+                        Qtd
+                    </button>
+                    <button 
+                        onClick={() => setQuoteViewMode('value')}
+                        className={`px-3 py-1 text-xs rounded-md transition-all ${quoteViewMode === 'value' ? 'bg-white shadow text-primary font-bold' : 'text-gray-500 hover:text-gray-700'}`}
+                    >
+                        Valor (R$)
+                    </button>
+                </div>
+            </div>
+            
             <div className="h-80">
                 <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={quotesByFactory}>
                         <CartesianGrid strokeDasharray="3 3" vertical={false} />
                         <XAxis dataKey="name" tick={{fontSize: 12}} />
-                        <YAxis allowDecimals={false} />
-                        <Tooltip />
-                        <Bar dataKey="value" name="Qtd" fill="#6366f1" radius={[4, 4, 0, 0]} barSize={40} />
+                        <YAxis allowDecimals={false} tickFormatter={quoteViewMode === 'value' ? (val) => `R$${val/1000}k` : undefined} />
+                        <Tooltip formatter={quoteViewMode === 'value' ? (val: number) => formatCurrency(val) : undefined} />
+                        <Bar 
+                            dataKey={quoteViewMode} 
+                            name={quoteViewMode === 'count' ? 'Quantidade' : 'Valor Total'} 
+                            fill="#6366f1" 
+                            radius={[4, 4, 0, 0]} 
+                            barSize={40} 
+                        />
                     </BarChart>
                 </ResponsiveContainer>
             </div>
