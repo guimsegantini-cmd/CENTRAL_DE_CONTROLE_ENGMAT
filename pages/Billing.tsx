@@ -4,8 +4,34 @@ import { OrderStatus } from '../types';
 import { Select } from '../components/ui/Select';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, Cell } from 'recharts';
 import { format, parseISO, startOfMonth, endOfMonth, addDays } from '../constants';
+import { Input } from '../components/ui/Input';
+import { Button } from '../components/ui/Button';
+import { Lock, ShieldCheck } from 'lucide-react';
 
 export const Billing: React.FC = () => {
+  // --- AUTH STATE ---
+  // Verifica se já foi desbloqueado nesta sessão
+  const [isUnlocked, setIsUnlocked] = useState(() => {
+    return sessionStorage.getItem('engmat_billing_unlocked') === 'true';
+  });
+  const [passwordInput, setPasswordInput] = useState('');
+  const [authError, setAuthError] = useState('');
+
+  const handleUnlock = (e: React.FormEvent) => {
+    e.preventDefault();
+    // SENHA DE ACESSO AO FATURAMENTO
+    const BILLING_PASSWORD = 'Engmat'; 
+
+    if (passwordInput === BILLING_PASSWORD) {
+        setIsUnlocked(true);
+        sessionStorage.setItem('engmat_billing_unlocked', 'true');
+        setAuthError('');
+    } else {
+        setAuthError('Senha incorreta. Tente novamente.');
+    }
+  };
+
+  // --- DATA LOGIC ---
   const { orders } = useData();
   
   const [startDate, setStartDate] = useState<string>(format(startOfMonth(new Date()), 'yyyy-MM-dd'));
@@ -13,7 +39,6 @@ export const Billing: React.FC = () => {
   const [filterFactory, setFilterFactory] = useState('');
 
   // 1. Invoiced Revenue Logic (Faturamento)
-  // Filter orders that are FATURADO and invoiceDate is within range
   const invoicedOrders = useMemo(() => {
     return orders.filter(o => {
         if (o.status !== OrderStatus.FATURADO || !o.invoiceDate) return false;
@@ -37,14 +62,9 @@ export const Billing: React.FC = () => {
   const totalRevenue = invoicedOrders.reduce((acc, o) => acc + o.value, 0);
 
   // 2. Commission Forecast Logic
-  // Filter FATURADO orders, calculate commission split based on terms, 
-  // and aggregate into months that fall within the selected view range (or show all future).
-  // Note: For the chart, we likely want to see a timeline.
-  
   const commissionData = useMemo(() => {
-      const dataMap: Record<string, Record<string, number>> = {}; // "YYYY-MM" -> { Factory: Value }
+      const dataMap: Record<string, Record<string, number>> = {};
       
-      // We need to iterate ALL invoiced orders to see if they have commission landing in this period
       const allInvoiced = orders.filter(o => o.status === OrderStatus.FATURADO && o.invoiceDate && o.paymentTerms);
       
       allInvoiced.forEach(o => {
@@ -53,20 +73,15 @@ export const Billing: React.FC = () => {
           const totalComm = (o.value * (o.commissionRate || 0)) / 100;
           let installments: Date[] = [];
 
-          // Parse Terms
           if (o.paymentTerms === 'Antecipado') {
-              // Use order sendDate month (Mês de cadastro do pedido)
               installments.push(parseISO(o.sendDate));
           } else {
-              // Assume format like "28 dias", "28/56 dias"
-              // Extract numbers
               const days = o.paymentTerms?.match(/\d+/g)?.map(Number) || [];
               if (days.length > 0) {
                   days.forEach(d => {
                       installments.push(addDays(parseISO(o.invoiceDate!), d));
                   });
               } else {
-                  // Fallback if parse fails, default 30 days
                   installments.push(addDays(parseISO(o.invoiceDate!), 30));
               }
           }
@@ -74,12 +89,14 @@ export const Billing: React.FC = () => {
           const commPerInstallment = totalComm / installments.length;
 
           installments.forEach(date => {
-             const monthKey = format(date, 'yyyy-MM'); // This works with our helper if it falls back to ISO, but we should ensure YYYY-MM
-             // Wait, our helper 'yyyy-MM-dd' is close. 'yyyy-MM' is not in my helper yet. 
-             // Let's use date.toISOString().slice(0, 7) for key
+             const monthKey = format(date, 'yyyy-MM'); // ISO YYYY-MM helper logic fallback usually
+             // Ensure YYYY-MM key
              const mKey = date.toISOString().slice(0, 7);
-
              const isoDate = format(date, 'yyyy-MM-dd');
+             
+             // Check if this specific installment falls in the filter range?
+             // Or usually commission forecast shows future. Let's keep it consistent with the view.
+             // If the view is "This Month", we want to see what we receive THIS MONTH.
              if (isoDate >= startDate && isoDate <= endDate) {
                  if (!dataMap[mKey]) dataMap[mKey] = {};
                  dataMap[mKey][o.factory] = (dataMap[mKey][o.factory] || 0) + commPerInstallment;
@@ -87,10 +104,9 @@ export const Billing: React.FC = () => {
           });
       });
 
-      // Transform to Recharts format
       return Object.entries(dataMap).map(([month, factories]) => {
           return {
-              name: format(parseISO(month + '-01'), 'MMM/yyyy'), // Uses our helper
+              name: format(parseISO(month + '-01'), 'MMM/yyyy'),
               date: month,
               ...factories
           };
@@ -106,7 +122,6 @@ export const Billing: React.FC = () => {
       return acc + monthSum;
   }, 0);
 
-  // Extract all unique factories present in commission data for stacking
   const factoriesInCommission = Array.from(new Set(
       commissionData.flatMap(item => Object.keys(item).filter(k => k !== 'name' && k !== 'date'))
   ));
@@ -114,8 +129,44 @@ export const Billing: React.FC = () => {
   const COLORS = ['#0ea5e9', '#22c55e', '#eab308', '#ef4444', '#8b5cf6', '#ec4899', '#64748b'];
   const formatCurrency = (value: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 
+  // --- RENDER LOCK SCREEN ---
+  if (!isUnlocked) {
+      return (
+        <div className="flex items-center justify-center min-h-[60vh]">
+            <div className="bg-white p-8 rounded-lg shadow-xl max-w-md w-full text-center border-t-4 border-primary">
+                <div className="bg-gray-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Lock className="w-8 h-8 text-gray-500" />
+                </div>
+                <h2 className="text-xl font-bold text-gray-800 mb-2">Acesso Restrito</h2>
+                <p className="text-sm text-gray-500 mb-6">
+                    A área de faturamento contém informações sensíveis. Digite a senha de administrador para continuar.
+                </p>
+
+                <form onSubmit={handleUnlock} className="space-y-4">
+                    <Input 
+                        type="password" 
+                        placeholder="Senha de acesso" 
+                        value={passwordInput}
+                        onChange={(e) => setPasswordInput(e.target.value)}
+                        className="text-center text-lg tracking-widest"
+                        autoFocus
+                    />
+                    {authError && (
+                        <p className="text-red-500 text-sm font-medium">{authError}</p>
+                    )}
+                    <Button type="submit" className="w-full">
+                        <ShieldCheck className="w-4 h-4 mr-2" />
+                        Desbloquear Visualização
+                    </Button>
+                </form>
+            </div>
+        </div>
+      );
+  }
+
+  // --- RENDER CONTENT ---
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 animate-fade-in">
       <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-white p-4 rounded-lg shadow-sm">
         <h2 className="text-2xl font-bold text-gray-800">Faturamento & Comissões</h2>
         <div className="flex flex-col sm:flex-row gap-4 items-center w-full md:w-auto">
@@ -135,6 +186,16 @@ export const Billing: React.FC = () => {
                   className="text-sm bg-transparent focus:outline-none text-gray-700"
               />
             </div>
+            <button 
+                onClick={() => {
+                    setIsUnlocked(false);
+                    sessionStorage.removeItem('engmat_billing_unlocked');
+                }}
+                className="text-gray-400 hover:text-red-500"
+                title="Bloquear tela"
+            >
+                <Lock className="w-5 h-5" />
+            </button>
         </div>
       </div>
 
