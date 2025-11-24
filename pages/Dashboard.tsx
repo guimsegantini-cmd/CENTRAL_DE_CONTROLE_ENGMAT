@@ -12,6 +12,7 @@ export const Dashboard: React.FC = () => {
   const [filterFactory, setFilterFactory] = useState('');
   const [targetViewMode, setTargetViewMode] = useState<'percent' | 'value'>('percent');
   const [quoteViewMode, setQuoteViewMode] = useState<'count' | 'value'>('count');
+  const [salesMixViewMode, setSalesMixViewMode] = useState<'value' | 'quantity'>('value');
 
   // --- Data Preparation ---
 
@@ -94,14 +95,19 @@ export const Dashboard: React.FC = () => {
   }, [orders, startDate, endDate, filterFactory]);
 
 
-  // 4. Sales by Product (Existing)
+  // 4. Sales by Product (Value and Quantity)
   const salesByProduct = useMemo(() => {
-      const data: Record<string, number> = {};
+      const data: Record<string, { value: number; quantity: number }> = {};
       filteredOrders.forEach(o => {
           if (filterFactory && o.factory !== filterFactory) return;
-          data[o.product] = (data[o.product] || 0) + o.value;
+          
+          if (!data[o.product]) {
+            data[o.product] = { value: 0, quantity: 0 };
+          }
+          data[o.product].value += o.value;
+          data[o.product].quantity += o.quantity;
       });
-      return Object.entries(data).map(([name, value]) => ({ name, value }));
+      return Object.entries(data).map(([name, stats]) => ({ name, ...stats }));
   }, [filteredOrders, filterFactory]);
 
   // 5. Quotes by Factory (Volume & Value)
@@ -300,9 +306,25 @@ export const Dashboard: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         
-        {/* Vendas por Produto */}
+        {/* Vendas por Produto (Mix de Vendas) */}
         <div className="bg-white p-6 rounded-lg shadow">
-            <h3 className="text-lg font-bold mb-4 border-b pb-2">Mix de Vendas (R$)</h3>
+            <div className="flex justify-between items-center mb-4 border-b pb-2">
+                <h3 className="text-lg font-bold">Mix de Vendas</h3>
+                <div className="flex bg-gray-100 rounded-lg p-1">
+                    <button 
+                        onClick={() => setSalesMixViewMode('value')}
+                        className={`px-3 py-1 text-xs rounded-md transition-all ${salesMixViewMode === 'value' ? 'bg-white shadow text-primary font-bold' : 'text-gray-500 hover:text-gray-700'}`}
+                    >
+                        Valor (R$)
+                    </button>
+                    <button 
+                        onClick={() => setSalesMixViewMode('quantity')}
+                        className={`px-3 py-1 text-xs rounded-md transition-all ${salesMixViewMode === 'quantity' ? 'bg-white shadow text-primary font-bold' : 'text-gray-500 hover:text-gray-700'}`}
+                    >
+                        Qtd
+                    </button>
+                </div>
+            </div>
             <div className="h-80">
                 <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
@@ -314,13 +336,13 @@ export const Dashboard: React.FC = () => {
                             outerRadius={100}
                             fill="#8884d8"
                             paddingAngle={5}
-                            dataKey="value"
+                            dataKey={salesMixViewMode}
                         >
                             {salesByProduct.map((entry, index) => (
                                 <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                             ))}
                         </Pie>
-                        <Tooltip formatter={(value: number) => formatCurrency(value)} />
+                        <Tooltip formatter={(value: number) => salesMixViewMode === 'value' ? formatCurrency(value) : `${value} un.`} />
                         <Legend layout="vertical" verticalAlign="middle" align="right" wrapperStyle={{ fontSize: '11px' }}/>
                     </PieChart>
                 </ResponsiveContainer>
