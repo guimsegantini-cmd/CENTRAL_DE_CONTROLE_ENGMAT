@@ -5,7 +5,7 @@ import { FACTORY_OPTIONS, FACTORY_PRODUCTS, ORDER_STATUS_OPTIONS, PAYMENT_TERMS_
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
 import { Select } from '../components/ui/Select';
-import { Plus, Search, Trash2, Edit2, AlertTriangle, FileCheck } from 'lucide-react';
+import { Plus, Search, Trash2, Edit2, AlertTriangle, FileCheck, X } from 'lucide-react';
 
 export const Orders: React.FC = () => {
   const { orders, addOrder, updateOrder, deleteOrder, getLeadTime } = useData();
@@ -167,6 +167,14 @@ export const Orders: React.FC = () => {
     setOrderToBill(null);
   };
 
+  const clearFilters = () => {
+    setStartDate(format(startOfMonth(new Date()), 'yyyy-MM-dd'));
+    setEndDate(format(endOfMonth(new Date()), 'yyyy-MM-dd'));
+    setSearchTerm('');
+    setFilterStatus('');
+    setFilterFactory('');
+  };
+
   return (
     <div className="space-y-6">
        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -206,33 +214,44 @@ export const Orders: React.FC = () => {
       </div>
 
        {/* Filters */}
-       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-white p-4 rounded-lg shadow-sm">
-        <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Busca</label>
-            <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <input 
-                    className="flex h-10 w-full rounded-md border border-gray-300 bg-white pl-9 pr-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-                    placeholder="Construtora, OC, Produto..." 
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                />
-            </div>
+       <div className="bg-white p-4 rounded-lg shadow-sm">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+          <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Busca</label>
+              <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <input 
+                      className="flex h-10 w-full rounded-md border border-gray-300 bg-white pl-9 pr-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                      placeholder="Construtora, OC, Produto..." 
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                  />
+              </div>
+          </div>
+          <Select 
+              options={FACTORY_OPTIONS.map(f => ({ value: f, label: f }))}
+              value={filterFactory}
+              onChange={(e) => setFilterFactory(e.target.value)}
+              placeholder="Todas as Fábricas"
+              label="Filtro Fábrica"
+          />
+          <Select 
+              options={ORDER_STATUS_OPTIONS.map(s => ({ value: s, label: s }))}
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              placeholder="Todos os Status"
+              label="Filtro Status"
+          />
+          <Button 
+            variant="secondary" 
+            onClick={clearFilters}
+            className="w-full md:w-auto"
+            title="Limpar todos os filtros"
+          >
+            <X className="w-4 h-4 mr-2" />
+            Limpar Filtros
+          </Button>
         </div>
-        <Select 
-            options={FACTORY_OPTIONS.map(f => ({ value: f, label: f }))}
-            value={filterFactory}
-            onChange={(e) => setFilterFactory(e.target.value)}
-            placeholder="Todas as Fábricas"
-            label="Filtro Fábrica"
-        />
-        <Select 
-            options={ORDER_STATUS_OPTIONS.map(s => ({ value: s, label: s }))}
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-            placeholder="Todos os Status"
-             label="Filtro Status"
-        />
       </div>
 
        {/* Table */}
