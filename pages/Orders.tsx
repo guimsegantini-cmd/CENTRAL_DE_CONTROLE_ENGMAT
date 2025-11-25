@@ -19,6 +19,7 @@ export const Orders: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
   const [filterFactory, setFilterFactory] = useState('');
+  const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
 
   // Form State
   const initialFormState: Partial<Order> = {
@@ -52,7 +53,7 @@ export const Orders: React.FC = () => {
 
   // Logic
   const filteredOrders = useMemo(() => {
-    return orders.filter(o => {
+    const filtered = orders.filter(o => {
       const oDate = o.sendDate;
       const matchDate = oDate >= startDate && oDate <= endDate;
 
@@ -66,7 +67,13 @@ export const Orders: React.FC = () => {
 
       return matchDate && matchSearch && matchStatus && matchFactory;
     });
-  }, [orders, startDate, endDate, searchTerm, filterStatus, filterFactory]);
+
+    return filtered.sort((a, b) => {
+        const dateA = new Date(a.sendDate).getTime();
+        const dateB = new Date(b.sendDate).getTime();
+        return sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
+    });
+  }, [orders, startDate, endDate, searchTerm, filterStatus, filterFactory, sortOrder]);
 
   const totalValue = filteredOrders.reduce((acc, o) => acc + Number(o.value), 0);
   const totalQty = filteredOrders.reduce((acc, o) => acc + Number(o.quantity), 0);
@@ -173,6 +180,7 @@ export const Orders: React.FC = () => {
     setSearchTerm('');
     setFilterStatus('');
     setFilterFactory('');
+    setSortOrder('desc');
   };
 
   return (
@@ -215,8 +223,8 @@ export const Orders: React.FC = () => {
 
        {/* Filters */}
        <div className="bg-white p-4 rounded-lg shadow-sm">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-          <div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+          <div className="lg:col-span-1">
               <label className="block text-sm font-medium text-gray-700 mb-1">Busca</label>
               <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -242,6 +250,16 @@ export const Orders: React.FC = () => {
               placeholder="Todos os Status"
               label="Filtro Status"
           />
+          <Select 
+              label="Ordenação"
+              options={[
+                  { value: 'desc', label: 'Mais recentes' },
+                  { value: 'asc', label: 'Mais antigos' }
+              ]}
+              value={sortOrder}
+              onChange={(e) => setSortOrder(e.target.value as 'desc' | 'asc')}
+              placeholder="Selecione..."
+          />
           <Button 
             variant="secondary" 
             onClick={clearFilters}
@@ -249,7 +267,7 @@ export const Orders: React.FC = () => {
             title="Limpar todos os filtros"
           >
             <X className="w-4 h-4 mr-2" />
-            Limpar Filtros
+            Limpar
           </Button>
         </div>
       </div>
