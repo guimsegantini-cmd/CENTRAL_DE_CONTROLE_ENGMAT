@@ -20,6 +20,7 @@ export const Quotes: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
   const [filterFactory, setFilterFactory] = useState('');
+  const [sortOrder, setSortOrder] = useState<'desc' | 'asc'>('desc');
 
   // Form State
   const initialFormState: Partial<Quote> = {
@@ -33,7 +34,7 @@ export const Quotes: React.FC = () => {
 
   // Derived Data
   const filteredQuotes = useMemo(() => {
-    return quotes.filter(q => {
+    const filtered = quotes.filter(q => {
       const qDate = q.date; // ISO string YYYY-MM-DD
       const matchDate = qDate >= startDate && qDate <= endDate;
       
@@ -46,7 +47,13 @@ export const Quotes: React.FC = () => {
 
       return matchDate && matchSearch && matchStatus && matchFactory;
     });
-  }, [quotes, startDate, endDate, searchTerm, filterStatus, filterFactory]);
+
+    return filtered.sort((a, b) => {
+        const dateA = new Date(a.date).getTime();
+        const dateB = new Date(b.date).getTime();
+        return sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
+    });
+  }, [quotes, startDate, endDate, searchTerm, filterStatus, filterFactory, sortOrder]);
 
   const totalValue = filteredQuotes.reduce((acc, q) => acc + Number(q.value), 0);
   const totalCount = filteredQuotes.length;
@@ -104,6 +111,7 @@ export const Quotes: React.FC = () => {
     setSearchTerm('');
     setFilterStatus('');
     setFilterFactory('');
+    setSortOrder('desc');
   };
 
   return (
@@ -140,8 +148,8 @@ export const Quotes: React.FC = () => {
 
       {/* Filters */}
       <div className="bg-white p-4 rounded-lg shadow-sm">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-          <div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 items-end">
+          <div className="lg:col-span-1">
               <label className="block text-sm font-medium text-gray-700 mb-1">Busca</label>
               <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -167,6 +175,16 @@ export const Quotes: React.FC = () => {
               placeholder="Todos os Status"
               label="Filtro Status"
           />
+          <Select 
+              label="Ordenação"
+              options={[
+                  { value: 'desc', label: 'Mais recentes' },
+                  { value: 'asc', label: 'Mais antigos' }
+              ]}
+              value={sortOrder}
+              onChange={(e) => setSortOrder(e.target.value as 'desc' | 'asc')}
+              placeholder="Selecione..."
+          />
           <Button 
             variant="secondary" 
             onClick={clearFilters}
@@ -174,7 +192,7 @@ export const Quotes: React.FC = () => {
             title="Limpar todos os filtros"
           >
             <X className="w-4 h-4 mr-2" />
-            Limpar Filtros
+            Limpar
           </Button>
         </div>
       </div>
