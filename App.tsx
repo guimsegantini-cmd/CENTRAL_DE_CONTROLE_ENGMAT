@@ -9,7 +9,6 @@ import { Orders } from './pages/Orders';
 import { Dashboard } from './pages/Dashboard';
 import { Settings } from './pages/Settings';
 import { Billing } from './pages/Billing';
-import { AIChat } from './pages/AIChat';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated } = useAuth();
@@ -43,11 +42,6 @@ const AppRoutes = () => {
             <Route path="/billing" element={
                 <ProtectedRoute>
                     <Billing />
-                </ProtectedRoute>
-            } />
-            <Route path="/ai" element={
-                <ProtectedRoute>
-                    <AIChat />
                 </ProtectedRoute>
             } />
             <Route path="/settings" element={
