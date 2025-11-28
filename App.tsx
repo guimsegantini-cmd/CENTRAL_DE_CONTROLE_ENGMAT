@@ -2,20 +2,21 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { DataProvider } from './contexts/DataContext';
-import { MainLayout } from './components/MainLayout';
+import { Layout } from './components/Layout';
 import { Login } from './pages/Login';
 import { Quotes } from './pages/Quotes';
 import { Orders } from './pages/Orders';
 import { Dashboard } from './pages/Dashboard';
 import { Settings } from './pages/Settings';
 import { Billing } from './pages/Billing';
+import { AIChat } from './pages/AIChat';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { isAuthenticated } = useAuth();
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
-  return <MainLayout>{children}</MainLayout>;
+  return <Layout>{children}</Layout>;
 };
 
 const AppRoutes = () => {
@@ -42,6 +43,11 @@ const AppRoutes = () => {
             <Route path="/billing" element={
                 <ProtectedRoute>
                     <Billing />
+                </ProtectedRoute>
+            } />
+            <Route path="/ai" element={
+                <ProtectedRoute>
+                    <AIChat />
                 </ProtectedRoute>
             } />
             <Route path="/settings" element={
