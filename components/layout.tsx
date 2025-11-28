@@ -8,7 +8,6 @@ import {
   LogOut,
   Building2,
   BadgeDollarSign,
-  Bot,
   ChevronLeft,
   ChevronRight
 } from 'lucide-react';
@@ -28,7 +27,6 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
     { to: '/quotes', icon: FileText, label: 'Orçamentos' },
     { to: '/orders', icon: Package, label: 'Pedidos' },
     { to: '/billing', icon: BadgeDollarSign, label: 'Faturamento' },
-    { to: '/ai', icon: Bot, label: 'Analista IA' },
     { to: '/settings', icon: Settings, label: 'Configurações' },
   ];
 
