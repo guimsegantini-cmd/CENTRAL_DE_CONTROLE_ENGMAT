@@ -13,6 +13,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { AIChat } from './AIChat'; // Importando o Chat flutuante se necessário, ou link na sidebar
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -34,7 +35,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      {/* Sidebar */}
+      {/* Sidebar Desktop */}
       <aside 
         className={`bg-primary text-white flex-shrink-0 hidden md:flex flex-col transition-all duration-300 ease-in-out ${
           isSidebarCollapsed ? 'w-20' : 'w-64'
@@ -120,7 +121,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       </aside>
 
       {/* Mobile Header & Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden relative">
         {/* Mobile Header */}
         <header className="bg-primary text-white md:hidden p-4 flex justify-between items-center shadow-md">
           <div className="flex items-center space-x-2">
@@ -152,7 +153,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         </nav>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-auto p-4 md:p-8">
+        <main className="flex-1 overflow-auto p-4 md:p-8 relative">
           {children}
         </main>
       </div>
