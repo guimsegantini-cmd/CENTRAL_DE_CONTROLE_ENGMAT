@@ -1,9 +1,10 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { useData } from '../contexts/DataContext';
 import { FACTORY_OPTIONS, format, parseISO, startOfMonth, endOfMonth, differenceInDays } from '../constants';
 import { QuoteStatus } from '../types';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell, RadialBarChart, RadialBar } from 'recharts';
 import { Select } from '../components/ui/Select';
+import { Maximize2, Minimize2 } from 'lucide-react';
 
 export const Dashboard: React.FC = () => {
   const { orders, quotes, settings } = useData();
@@ -13,6 +14,28 @@ export const Dashboard: React.FC = () => {
   const [targetViewMode, setTargetViewMode] = useState<'percent' | 'value'>('percent');
   const [quoteViewMode, setQuoteViewMode] = useState<'count' | 'value'>('count');
   const [salesMixViewMode, setSalesMixViewMode] = useState<'value' | 'quantity'>('value');
+
+  // Fullscreen Logic
+  const dashboardRef = useRef<HTMLDivElement>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+        dashboardRef.current?.requestFullscreen().catch(err => {
+            console.error(`Error attempting to enable fullscreen: ${err.message}`);
+        });
+    } else {
+        document.exitFullscreen();
+    }
+  };
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+        setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
 
   // --- Data Preparation ---
 
@@ -136,10 +159,16 @@ export const Dashboard: React.FC = () => {
   const formatCurrency = (value: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value);
 
   return (
-    <div className="space-y-8">
+    <div 
+        ref={dashboardRef} 
+        className={`space-y-8 bg-gray-50 transition-all duration-300 ${isFullscreen ? 'p-8 overflow-y-auto h-screen w-screen' : ''}`}
+    >
       {/* Header & Filters */}
       <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-white p-4 rounded-lg shadow-sm">
-        <h2 className="text-2xl font-bold text-gray-800">Dashboard de Vendas</h2>
+        <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+            Dashboard de Vendas
+            {isFullscreen && <span className="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-normal">Ao Vivo</span>}
+        </h2>
         <div className="flex flex-col sm:flex-row gap-4 items-center w-full md:w-auto">
           <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 border rounded-md">
               <span className="text-xs text-gray-500 font-medium">Período:</span>
@@ -164,6 +193,13 @@ export const Dashboard: React.FC = () => {
              placeholder="Todas as Representadas"
              className="w-full sm:w-48"
           />
+          <button 
+            onClick={toggleFullscreen}
+            className="p-2 text-gray-500 hover:text-primary bg-gray-50 border border-gray-200 rounded-md transition-colors hover:bg-gray-100"
+            title={isFullscreen ? "Sair da Tela Cheia" : "Tela Cheia"}
+          >
+             {isFullscreen ? <Minimize2 className="w-5 h-5"/> : <Maximize2 className="w-5 h-5"/>}
+          </button>
         </div>
       </div>
 
