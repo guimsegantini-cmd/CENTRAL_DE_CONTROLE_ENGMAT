@@ -161,13 +161,13 @@ export const Dashboard: React.FC = () => {
   return (
     <div 
         ref={dashboardRef} 
-        className={`space-y-8 bg-gray-50 transition-all duration-300 ${isFullscreen ? 'p-8 overflow-y-auto h-screen w-screen' : ''}`}
+        className={`space-y-8 bg-gray-50 transition-all duration-300 ${isFullscreen ? 'p-8 overflow-y-auto h-screen w-screen bg-white fixed inset-0 z-50' : ''}`}
     >
       {/* Header & Filters */}
       <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-white p-4 rounded-lg shadow-sm">
         <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
             Dashboard de Vendas
-            {isFullscreen && <span className="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-normal">Ao Vivo</span>}
+            {isFullscreen && <span className="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded-full font-normal animate-pulse">Modo Apresentação</span>}
         </h2>
         <div className="flex flex-col sm:flex-row gap-4 items-center w-full md:w-auto">
           <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 border rounded-md">
