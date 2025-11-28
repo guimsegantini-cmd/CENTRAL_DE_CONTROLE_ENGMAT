@@ -13,7 +13,6 @@ import {
   ChevronRight
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { AIChat } from './AIChat'; // Importando o Chat flutuante se necessário, ou link na sidebar
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -44,7 +43,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
         <div className={`p-6 flex items-center border-b border-gray-700 ${isSidebarCollapsed ? 'justify-center' : 'space-x-2'}`}>
           <Building2 className="w-8 h-8 text-accent flex-shrink-0" />
           {!isSidebarCollapsed && (
-            <div className="overflow-hidden whitespace-nowrap">
+            <div className="overflow-hidden whitespace-nowrap animate-fade-in">
               <h1 className="text-lg font-bold leading-tight">ENGMAT</h1>
               <p className="text-xs text-gray-400">Central de Controle</p>
             </div>
